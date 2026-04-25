@@ -42,9 +42,18 @@ const Navbar = () => {
             color: 'white',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            overflow: 'hidden'
           }}>
-            <User size={18} />
+            {user?.profileImage ? (
+              <img 
+                src={`http://localhost:5001${user.profileImage}`} 
+                alt="Profile" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            ) : (
+              <User size={18} />
+            )}
           </div>
           <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>{user?.name}</span>
         </div>

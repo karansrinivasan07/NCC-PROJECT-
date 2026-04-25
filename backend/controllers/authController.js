@@ -96,3 +96,34 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.updateProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an image file' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Delete old profile image if it exists
+    if (user.profileImage) {
+      const path = require('path');
+      const fs = require('fs');
+      const oldPath = path.join(__dirname, '..', user.profileImage);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    user.profileImage = `/uploads/profiles/${req.file.filename}`;
+    await user.save();
+
+    res.json({
+      message: 'Profile image updated',
+      profileImage: user.profileImage
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
