@@ -1,0 +1,10 @@
+{
+  "name": "ncc-management-system",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node backend/index.js",
+    "backend": "cd backend && npm start",
+    "frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && node seed.js"
+  }
+}
