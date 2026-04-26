@@ -51,11 +51,43 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Connect to MongoDB
+// Connect to MongoDB with improved resilience
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ncc_management';
 const PORT = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch(err => console.error('Could not connect to MongoDB', err));
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log('✅ Connected to MongoDB');
+  } catch (err) {
+    console.error('❌ Could not connect to MongoDB. Error details:');
+    console.error('- Message:', err.message);
+    
+    if (MONGODB_URI.includes('mongodb+srv')) {
+      console.warn('💡 TIP: If using MongoDB Atlas, ensure your IP is whitelisted.');
+    }
+    
+    // If Atlas fails, try local fallback if not already trying local
+    if (MONGODB_URI.includes('mongodb+srv')) {
+      console.log('🔄 Attempting fallback to local MongoDB...');
+      try {
+        await mongoose.connect('mongodb://localhost:27017/ncc_management', {
+          serverSelectionTimeoutMS: 2000,
+        });
+        console.log('✅ Connected to LOCAL MongoDB');
+      } catch (localErr) {
+        console.error('❌ Local MongoDB also unreachable. Database features will be unavailable.');
+      }
+    }
+  }
+};
+
+// Start server immediately
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🔗 API Health Check: http://localhost:${PORT}/`);
+  // Initiate DB connection in background
+  connectDB();
+});

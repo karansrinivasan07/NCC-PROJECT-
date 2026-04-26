@@ -52,7 +52,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    const emailLower = email.toLowerCase();
+    const emailLower = email.trim().toLowerCase();
     const user = await User.findOne({ email: emailLower });
     
     if (!user) {
@@ -103,7 +103,12 @@ exports.updateProfileImage = async (req, res) => {
       return res.status(400).json({ message: 'Please upload an image file' });
     }
 
-    const user = await User.findById(req.user.id);
+    // Mock user check
+    if (req.user._id.startsWith('mock_')) {
+      return res.status(403).json({ message: 'Profile image update not available for mock users' });
+    }
+
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // Delete old profile image if it exists
