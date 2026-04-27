@@ -94,9 +94,13 @@ const Login = () => {
                 border: '2px solid #4b5320'
               }}>
                 <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/e/e4/NCC_Logo.png" 
+                  src="/ncc_logo.png" 
                   alt="NCC Logo" 
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://upload.wikimedia.org/wikipedia/commons/e/e4/NCC_Logo.png";
+                  }}
                 />
               </div>
             </motion.div>
