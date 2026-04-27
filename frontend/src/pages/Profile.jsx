@@ -7,7 +7,38 @@ const Profile = () => {
   const { user, setUser } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    try {
+      await axios.put('http://localhost:5001/api/auth/change-password', passwordData);
+      setMessage('Password updated successfully!');
+      setShowPasswordForm(false);
+      setPasswordData({ oldPassword: '', newPassword: '' });
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update password');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleDeactivation = async () => {
+    if (window.confirm('Are you sure you want to request account deactivation? This action cannot be undone.')) {
+      try {
+        await axios.post('http://localhost:5001/api/auth/request-deactivation');
+        setUser({ ...user, isDeactivationRequested: true });
+        alert('Deactivation request submitted successfully.');
+      } catch (err) {
+        alert('Failed to submit request.');
+      }
+    }
+  };
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -33,7 +64,6 @@ const Profile = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      // Update local user state with new image URL
       setUser({ ...user, profileImage: res.data.profileImage });
       setMessage('Profile picture updated successfully!');
       setTimeout(() => setMessage(''), 3000);
@@ -66,8 +96,41 @@ const Profile = () => {
         </div>
       )}
 
+      {showPasswordForm && (
+        <div className="card" style={{ marginBottom: '1.5rem', padding: '2rem' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Change Password</h3>
+          <form onSubmit={handlePasswordChange}>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Old Password</label>
+              <input 
+                type="password" 
+                className="input" 
+                required 
+                value={passwordData.oldPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
+              />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>New Password</label>
+              <input 
+                type="password" 
+                className="input" 
+                required 
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button type="submit" className="btn btn-primary" disabled={passwordLoading}>
+                {passwordLoading ? 'Updating...' : 'Update Password'}
+              </button>
+              <button type="button" className="btn btn-outline" onClick={() => setShowPasswordForm(false)}>Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="card" style={{ padding: '3.5rem 2rem', textAlign: 'center', marginBottom: '2.5rem', position: 'relative', overflow: 'hidden' }}>
-        {/* Background Pattern */}
         <div style={{ position: 'absolute', top: 0, right: 0, width: '150px', height: '150px', background: 'var(--primary)', opacity: 0.05, borderRadius: '0 0 0 100%' }}></div>
         
         <div 
@@ -185,7 +248,7 @@ const Profile = () => {
             Manage your account security and notification preferences.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <button className="btn btn-outline" style={{ justifyContent: 'flex-start' }}>Change Password</button>
+            <button className="btn btn-outline" style={{ justifyContent: 'flex-start' }} onClick={() => setShowPasswordForm(true)}>Change Password</button>
             <button 
               className="btn btn-outline" 
               style={{ justifyContent: 'flex-start' }}
@@ -194,7 +257,19 @@ const Profile = () => {
             >
               {uploading ? 'Uploading...' : 'Update Profile Image'}
             </button>
-            <button className="btn btn-outline" style={{ justifyContent: 'flex-start', color: 'var(--danger)', borderColor: '#fee2e2' }}>Request Deactivation</button>
+            <button 
+              className="btn btn-outline" 
+              style={{ 
+                justifyContent: 'flex-start', 
+                color: user?.isDeactivationRequested ? 'var(--text-muted)' : 'var(--danger)', 
+                borderColor: user?.isDeactivationRequested ? 'var(--border)' : '#fee2e2',
+                cursor: user?.isDeactivationRequested ? 'not-allowed' : 'pointer'
+              }} 
+              onClick={handleDeactivation}
+              disabled={user?.isDeactivationRequested}
+            >
+              {user?.isDeactivationRequested ? 'Deactivation Pending' : 'Request Deactivation'}
+            </button>
           </div>
         </div>
       </div>

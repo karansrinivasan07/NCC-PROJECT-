@@ -14,6 +14,8 @@ import Materials from './pages/Materials';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import GroupChat from './pages/GroupChat';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -39,6 +41,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           
           <Route path="/" element={
             <ProtectedRoute>

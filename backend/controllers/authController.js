@@ -20,6 +20,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+
     user = new User({
       name,
       email: emailLower,
@@ -37,6 +38,10 @@ exports.register = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      rollNumber: user.rollNumber,
+      class: user.class,
+      section: user.section,
+      profileImage: user.profileImage,
       token: generateToken(user._id)
     });
   } catch (err) {
@@ -71,6 +76,10 @@ exports.login = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      rollNumber: user.rollNumber,
+      class: user.class,
+      section: user.section,
+      profileImage: user.profileImage,
       token: generateToken(user._id)
     });
   } catch (err) {
@@ -128,6 +137,103 @@ exports.updateProfileImage = async (req, res) => {
       message: 'Profile image updated',
       profileImage: user.profileImage
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect old password' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.requestDeactivation = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.isDeactivationRequested = true;
+    await user.save();
+    
+    console.log(`Deactivation request received from user: ${user.email}`);
+    res.json({ message: 'Deactivation request submitted. An admin will review it shortly.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email.toLowerCase() });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found with that email' });
+    }
+
+    // Get reset token
+    const resetToken = user.getResetPasswordToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset URL
+    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+    // FOR DEVELOPMENT: Log the reset link to console
+    console.log('\n----------------------------------------');
+    console.log('🔑 PASSWORD RESET LINK (Log for Dev Only):');
+    console.log(resetUrl);
+    console.log('----------------------------------------\n');
+
+    res.json({ message: 'Password reset link generated. Check the server terminal (for development).' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const crypto = require('crypto');
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.resetToken)
+      .digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.json({ message: 'Password reset successful. You can now log in with your new password.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

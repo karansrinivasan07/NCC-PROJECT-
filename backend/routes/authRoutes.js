@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { register, login, getMe, getAllUsers, updateProfileImage } = require('../controllers/authController');
+const { register, login, getMe, getAllUsers, updateProfileImage, changePassword, requestDeactivation, forgotPassword, resetPassword } = require('../controllers/authController');
 const { auth, authorize } = require('../middleware/auth');
 
 // Multer storage config for profile images
@@ -32,5 +32,9 @@ router.post('/login', login);
 router.get('/me', auth, getMe);
 router.get('/users', auth, authorize('admin', 'staff'), getAllUsers);
 router.put('/profile-image', auth, upload.single('image'), updateProfileImage);
+router.put('/change-password', auth, changePassword);
+router.post('/request-deactivation', auth, requestDeactivation);
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:resetToken', resetPassword);
 
 module.exports = router;

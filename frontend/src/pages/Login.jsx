@@ -54,7 +54,6 @@ const Login = () => {
       padding: '1.5rem',
       fontFamily: 'Inter, system-ui, sans-serif'
     }}>
-      {/* Decorative Stripes */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '8px', display: 'flex' }}>
         <div style={{ flex: 1, background: '#cc0000' }}></div>
         <div style={{ flex: 1, background: '#000080' }}></div>
@@ -95,13 +94,9 @@ const Login = () => {
                 border: '2px solid #4b5320'
               }}>
                 <img 
-                  src="/ncc_logo.png" 
+                  src="https://upload.wikimedia.org/wikipedia/commons/e/e4/NCC_Logo.png" 
                   alt="NCC Logo" 
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://upload.wikimedia.org/wikipedia/commons/e/e4/NCC_Logo.png";
-                  }}
                 />
               </div>
             </motion.div>
@@ -113,7 +108,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Role Selection */}
           <div style={{ 
             display: 'flex', 
             background: '#f1f5f9', 
@@ -263,6 +257,11 @@ const Login = () => {
                       required
                     />
                   </div>
+                  <div style={{ textAlign: 'right', marginTop: '0.75rem' }}>
+                    <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: '#64748b', textDecoration: 'none', fontWeight: 600 }}>
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
 
                 <motion.button 
@@ -320,4 +319,3 @@ const Login = () => {
 };
 
 export default Login;
-
